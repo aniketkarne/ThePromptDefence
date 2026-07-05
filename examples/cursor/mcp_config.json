@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ThePromptDefence": {
+      "command": "ThePromptDefence",
+      "args": [],
+      "env": {
+        "SHIELD_RISK_THRESHOLD": "0.6",
+        "SHIELD_LOG_DIR": "./.shield-logs"
+      }
+    }
+  }
+}
