@@ -19,7 +19,12 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "mcp",
+    # mcp<2: src/shield_mcp/server.py imports `mcp.server.fastmcp.FastMCP`,
+    # which was renamed to `mcp.server.mcpserver.MCPServer` in mcp 2.x. Without
+    # this pin, a fresh `pip install` on Sept 2026 resolves to mcp 2.0+ and the
+    # server crashes on import with ModuleNotFoundError. Migration to the v2
+    # API is tracked as a follow-up; the pin keeps `pip install` working today.
+    "mcp<2",
     "transformers",
     "torch",
     "numpy",

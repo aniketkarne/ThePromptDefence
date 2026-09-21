@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.10-slim-bookworm
 
 LABEL org.opencontainers.image.title="ThePromptDefence"
 LABEL org.opencontainers.image.description="A Local-First, Zero-Cost Prompt Injection Detection Server for MCP"
@@ -28,5 +28,7 @@ RUN python -c "\
 ENV PYTHONUNBUFFERED=1
 ENV HF_HOME="/root/.cache/huggingface"
 
-# Run the server
-CMD ["python", "-m", "shield_mcp.server"]
+# Run the server using the [project.scripts] entry point installed by pip —
+# keeps the Dockerfile in sync with pyproject.toml and avoids drift if the
+# module path ever changes.
+CMD ["ThePromptDefence"]
