@@ -1,10 +1,13 @@
+import hashlib
+import logging
+import sys
+
 from mcp.server.fastmcp import FastMCP
+
 from shield_mcp.detectors.heuristics import HeuristicDetector
 from shield_mcp.detectors.ml_models import MLDetector
 from shield_mcp.detectors.structural import StructuralDetector
 from shield_mcp.utils.config import config
-import logging
-import sys
 
 # Configure logging
 # We want to log to file as well
@@ -43,7 +46,11 @@ def analyze_prompt(prompt: str) -> dict:
         - risk_score: float (0.0 to 1.0)
         - category: string (optional)
     """
-    logger.info(f"Analyzing prompt: {prompt[:50]}...")
+    # Log a fingerprint + length only — never the prompt text itself.
+    # The README claims "100% Local — No external API calls, no data leaves
+    # your machine", so the file log must not contain user prompts either.
+    prompt_fp = hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16]
+    logger.info(f"Analyzing prompt (len={len(prompt)}, sha256={prompt_fp})")
 
     # Level 1: Heuristics
     is_inj, score, cat = heuristic_detector.check(prompt)
