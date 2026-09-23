@@ -210,7 +210,7 @@ from shield_mcp.detectors.structural import StructuralDetector
 class ShieldAPI:
     def __init__(self):
         self.h = HeuristicDetector()
-        self.m = MLDetector()   # Loads DeBERTa model on first init
+        self.m = MLDetector()   # DeBERTa loads lazily on first .check()
         self.s = StructuralDetector()
 
     def analyze(self, prompt: str) -> dict:
@@ -249,7 +249,7 @@ print(result)
 | `SHIELD_LOG_DIR` | `~/.shield-mcp/logs/` | Where to write detection logs |
 | `SHIELD_MODEL_NAME` | `protectai/deberta-v3-base-prompt-injection-v2` | HuggingFace model ID |
 | `HF_HOME` | `~/.cache/huggingface/` | HuggingFace model cache directory |
-| `SHIELD_OFFLINE_MODE` | `false` | Skip ML check if model unavailable |
+| `SHIELD_OFFLINE_MODE` | `false` | Skip the DeBERTa model entirely (no download, no load). Heuristic + Structural layers remain active; only the semantic ML layer is disabled. Useful for air-gapped deployments or users who don't want the ~400MB dependency. |
 
 ### `shield_config.json`
 
@@ -400,7 +400,7 @@ pytest
 Regex patterns catch well-known jailbreak templates. Runs in <1ms.
 
 ### Level 2 — Semantic ML (DeBERTa v3)
-`protectai/deberta-v3-base-prompt-injection-v2` classifies intent. First run downloads ~400MB model, then runs entirely offline.
+`protectai/deberta-v3-base-prompt-injection-v2` classifies intent. The model is loaded lazily on the first `check()` call after the MCP server starts — `__init__` is now a no-op so server startup is instant and concurrent first-callers share one download (class-level lock). First run still downloads ~400MB; after that it's entirely offline. Set `SHIELD_OFFLINE_MODE=true` to skip the download entirely (heuristic + structural layers still run).
 
 ### Level 3 — Structural
 Base64/Hex decoding + Shannon entropy analysis catches obfuscated payloads.

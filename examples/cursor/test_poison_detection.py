@@ -35,6 +35,9 @@ def main() -> int:
     try:
         from shield_mcp.detectors.ml_models import MLDetector  # noqa: E402
         m = MLDetector()
+        # MLDetector() no longer loads the model — trigger the load here so
+        # `m.loaded` reflects the real availability, not "did someone call check() yet".
+        m.warm_up()
         ml_available = m.loaded
     except Exception as e:
         print(f"  (ML detector unavailable: {e} — running heuristics + structural only)\n")

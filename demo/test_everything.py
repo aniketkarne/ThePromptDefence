@@ -234,7 +234,10 @@ def test_mcp_server_start():
         proc.stdin.flush()
 
         # Read first 2 lines (init response + tools/call response)
-        time.sleep(3)  # Give server time to load model
+        # Generous timeout: lazy-loaded DeBERTa needs ~3-8s on a cold cache to
+        # download + load on the first analyze_prompt call. (Previously this
+        # load happened at server startup, so we got a head start.)
+        time.sleep(15)  # Give server time to load model and respond
         proc.stdin.close()
 
         out = proc.stdout.read().decode(errors="replace")

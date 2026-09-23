@@ -47,13 +47,18 @@ st.set_page_config(
 @st.cache_resource
 def load_detectors():
     h = HeuristicDetector()
+    m = None
+    ml_available = False
     try:
         m = MLDetector()
+        # MLDetector() no longer loads the model — that happens lazily on the
+        # first .check() call. warm_up() lets us pay the ~400MB download here
+        # (the Streamlit app sits idle between requests, so blocking at startup
+        # is fine) instead of stalling the first Analyze click.
+        m.warm_up()
         ml_available = m.loaded
     except Exception as e:
         st.warning(f"ML detector unavailable: {e}. Running heuristics + structural only.")
-        m = None
-        ml_available = False
     s = StructuralDetector()
     return h, m, s, ml_available
 
