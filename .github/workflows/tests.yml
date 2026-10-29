@@ -26,3 +26,23 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+  efficacy:
+    # The unit tests prove individual patterns fire. This job measures the
+    # confusion matrix over a realistic corpus and fails the build when
+    # precision, recall or the false-positive rate regress.
+    name: Efficacy benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run efficacy benchmark
+        run: python benchmarks/efficacy.py
