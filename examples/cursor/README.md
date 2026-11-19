@@ -10,11 +10,16 @@ Time to reproduce: **~3 minutes**.
 pip install git+https://github.com/aniketkarne/ThePromptDefence.git
 ```
 
-Verify it runs:
+Verify it runs (from the repo root):
 
 ```bash
-ThePromptDefence --help    # or just `ThePromptDefence` — starts the stdio server
+python test_client.py
 ```
+
+This starts the server over stdio, sends one known attack and one benign
+prompt, and exits non-zero unless both verdicts match the documented
+contract. (There is no `--help`: the entry point starts the stdio server
+and blocks until the client disconnects.)
 
 ## 2. Wire it into Cursor
 
@@ -29,7 +34,8 @@ Paste:
       "command": "ThePromptDefence",
       "args": [],
       "env": {
-        "SHIELD_RISK_THRESHOLD": "0.6"
+        "SHIELD_RISK_THRESHOLD": "0.6",
+        "SHIELD_LOG_DIR": "./.shield-logs"
       }
     }
   }
@@ -75,7 +81,7 @@ The agent reads the file, calls `analyze_prompt` on its content, the shield retu
 
 …and the agent refuses, showing:
 
-> 🛡️ Blocked: Instruction Override (risk 1.00, 4.2ms) — refusing to follow embedded instructions in `poisoned_doc.md`.
+> 🛡️ Blocked: Instruction Override (risk 1.00) — refusing to follow embedded instructions in `poisoned_doc.md`.
 
 ## 6. Verify locally without Cursor
 
@@ -98,8 +104,8 @@ This runs the shield directly against `poisoned_doc.md`'s content and prints the
 
 ## Talking points for the demo
 
-- **Latency**: 4-30ms per call — invisible to the user
+- **Latency**: a blocked prompt short-circuits at the regex layer — 2.7 ms end-to-end measured over MCP. A clean prompt also runs the DeBERTa semantic layer on CPU (~90 ms steady-state, slower on the first call per process). Either way it is invisible inside an agent turn
 - **Local**: nothing leaves the machine — works on a plane
 - **Free**: no per-call cost vs Lakera/Protect AI cloud APIs
 - **MCP-native**: 2-line config, no SDK to learn
-- **Catches what regex misses**: DeBERTa catches paraphrased injections like the one in `poisoned_doc.md`
+- **Catches what regex misses**: the DeBERTa layer flags paraphrased injections that match no rule. (`poisoned_doc.md` itself is caught by the regex layer — "Ignore all previous instructions" matches the Instruction Override rule; on its own, DeBERTa scores that document low-risk)
